@@ -2,10 +2,17 @@ cinfo = read.csv('./data_safe/channelsinfo_clean.csv')
 ginfo = read.csv('./data_safe/twitchtools_teamsinfo.csv')
 c2g   = read.csv('./data_safe/testc2g.csv')
 
-n = 100
-sample_ind = sample.int(dim(c2g)[1],n)
+# n = 200
+# c2g_n = c2g[1:n,]
 
-c2g_n = c2g[sample_ind,]
+# sample_ind = sample.int(dim(c2g)[1],n)
+# c2g_n = c2g[sample_ind,]
+
+
+c_name_ls = c("towelliee","sodapoppin","trumpsc","thijshs","forsenlol")
+ind = which(cinfo$engid %in% c_name_ls)
+c2g_n = c2g[c2g[,2] %in% (ind-1),]
+n = dim(c2g_n)[1]
 
 links      = data.frame(c2g_n)
 links$X    = NULL
@@ -72,6 +79,12 @@ rownames(Nodes_gcu) <- 1:dim(Nodes_gcu)[1]-1
 links$g = match(links$g, Nodes_gu$link) - 1   # remapping
 links$c = match(links$c, Nodes_cu$link) + dim(Nodes_gu)[1] - 1
 
+
+MyClickScript <- 'alert("You clicked " + d.name + " which is in row " +
+       (d.index + 1) +  " of your original R data frame");'
+
 forceNetwork(Links = links, Nodes = Nodes_gcu, Source = "c",
              Target = "g", Value = "wid", NodeID = "name",
-             Group = "group", Nodesize = "size",opacity = 1, zoom = TRUE,legend = TRUE)
+             Group = "group", Nodesize = "size",opacity = 1, 
+             zoom = TRUE,legend = TRUE,
+             clickAction = MyClickScript)
