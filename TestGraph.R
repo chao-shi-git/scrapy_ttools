@@ -1,19 +1,54 @@
-cinfo = read.csv('./data_safe/channelsinfo_clean.csv')
-ginfo = read.csv('./data_safe/twitchtools_teamsinfo.csv')
-c2g   = read.csv('./data_safe/testc2g.csv')
+library(networkD3)
+library(dplyr)
 
+
+# read files in -- these are processed files using Python
+cinfo = read.csv('./data_safe/channelsinfo_clean.csv')
+ginfo = read.csv('./data_safe/teamsinfo_clean.csv')
+c2g   = read.csv('./data_safe/testc2g.csv')
+g2c   = read.csv('./data_safe/testg2c.csv')
+
+# ===== input slicing method 1 -- first n edges ====
 # n = 200
 # c2g_n = c2g[1:n,]
 
+
+# ===== input slicing method 2 -- random n edges ====
+# n = 200
 # sample_ind = sample.int(dim(c2g)[1],n)
 # c2g_n = c2g[sample_ind,]
 
+# # ===== input slicing method 3 -- search with channel name ====
+# c_name_ls = c("towelliee","sodapoppin","trumpsc","thijshs","forsenlol")
+# ind_c = which(cinfo$engid %in% c_name_ls)
+# c2g_n = c2g[c2g[,2] %in% (ind_c-1),]
+# n = dim(c2g_n)[1]
 
-c_name_ls = c("towelliee","sodapoppin","trumpsc","thijshs","forsenlol")
-ind = which(cinfo$engid %in% c_name_ls)
-c2g_n = c2g[c2g[,2] %in% (ind-1),]
+# # ===== input slicing method 4 -- search with team name ====
+# g_name_ls = c("SoloMid","Riot Games","Cloud9","Tempo Storm")
+# ind_g = which(ginfo$team_name %in% g_name_ls)
+# g2c_n = g2c[g2c[,2] %in% (ind_g-1),]
+# n = dim(g2c_n)[1]
+# 
+# c2g_n = data.frame(g2c_n$c, g2c_n$g)
+
+
+# ===== input slicing method 4.2 -- search with channel name using c2g ===
+g_name_ls = c("SoloMid","Riot Games","Cloud9","Tempo Storm")
+subset = ginfo %>% 
+  arrange(desc(team_view_per_day)) %>% 
+  top_n(10)
+
+g_name_ls = subset$team_name
+
+ind_g = which(ginfo$team_name %in% g_name_ls)
+c2g_n = c2g[c2g[,3] %in% (ind_g-1),]
 n = dim(c2g_n)[1]
 
+
+
+
+# define links (or edges) in the graph
 links      = data.frame(c2g_n)
 links$X    = NULL
 links$wid = rep_len(5,n)
@@ -26,7 +61,7 @@ links$wid = rep_len(5,n)
 # 6    6 2106   5
 
 Nodes_c      = data.frame(links$c,cinfo$display_name[links$c+1])
-Nodes_c$size  = log2(cinfo$channel_followers[links$c+1])   
+Nodes_c$size = log2(cinfo$channel_followers[links$c+1])   
 # links.c cinfo.display_name.links.c...1.
 # 1        0                        Janowicz
 # 2        3                       cnotbusch
@@ -50,6 +85,7 @@ Nodes_cu = unique.data.frame(Nodes_c)
 nc = dim(Nodes_cu)[1]
 
 Nodes_cu$group = rep_len(1,nc)
+Nodes_cu$group = cinfo$last_game[Nodes_cu$link]
 
 rownames(Nodes_cu) <- 1:nc-1
 Nodes_cu = Nodes_cu[,c(1,2,4,3)]
