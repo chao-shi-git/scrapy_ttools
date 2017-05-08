@@ -11,11 +11,11 @@
 vars_c = sort(cinfo$engid)
 vars_g = sort(ginfo$team_name)
 
-# top 3 channels with most viewers per follower per day
+# default channel input using top channels with most viewers per follower per day
 c_subset  = cinfo %>% arrange(desc(view_per_follower_per_day)) %>% top_n(1)
 c_name_ls = c_subset$engid
 
-# top 3 teams with most viewers per day
+# default team input using top teams with most viewers per day
 g_subset  = ginfo %>% arrange(desc(team_view_per_day)) %>% top_n(10)
 g_name_ls = g_subset$team_name
 
@@ -26,7 +26,7 @@ navbarPage(div(style='font-size: 25px;', "Twitch Graph"),
            
            # ======================================================================================
            # ====================                                         =========================
-           # ====================     Tab 1 Starts -- Interactive map     =========================
+           # ====================     Tab 1 Starts -- Interactive Graph   =========================
            # ====================                                         =========================
            # ======================================================================================
            
@@ -46,7 +46,7 @@ navbarPage(div(style='font-size: 25px;', "Twitch Graph"),
                                    "),
                         
                         # ============================================== #
-                        #              THE GRAPH -- networkD3            #
+                        #       THE SOCIAL NETWORK GRAPH -- networkD3    #
                         # ============================================== #
                         
                         forceNetworkOutput("force",width="100%", height="100%"),
@@ -60,31 +60,14 @@ navbarPage(div(style='font-size: 25px;', "Twitch Graph"),
                                       width = 300, height = "auto",
                                       
                                       h2("Pick and Choose"),
-                                      
-                                      # ---------------------------------------------------------------------------
-                                      # Each fluidRow is for 1 input check box
-                                      # Due to specific contidionalPanel design, checkboxGroupInput is not chosen
-                                      # ---------------------------------------------------------------------------
+
                                       selectizeInput('channalname', 'Channel Name', choices = vars_c, selected = c_name_ls, multiple = TRUE),
                                       selectizeInput('teamname', 'Team Name', choices = vars_g, selected = g_name_ls, multiple = TRUE),
-                                      sliderInput("expand", "Extra Expansion", 0, min = 0,
-                                                  max = 3, step = 1),
-                                      sliderInput("opacity", "Opacity", 0.9, min = 0.1,
-                                                  max = 1, step = .1),
+                                      sliderInput("expand", "Extra Expansion", 0, min = 0, max = 3, step = 1),
+                                      sliderInput("opacity", "Opacity", 0.9, min = 0.1, max = 1, step = .1)
                                       # verbatimTextOutput('test'),
                                       
-                                      # action button -- user triggers a plot refresh when all changes are made,
-                                      #                  since backend calculation and map refresh take some time 
-                                      #                  (filtering > weighted average > plot)
-                                      actionButton("do", "Update Plots",icon("refresh"), width="100%")
-                                      
                         ),  # end of absolutePanel "controls"
-                        
-                        
-                        
-                        
-                        
-                        
                         
                         tags$div(id="cite",
                                  'Twitch Graph --- ', tags$em('Chao Shi'), '05/2017'
@@ -94,16 +77,15 @@ navbarPage(div(style='font-size: 25px;', "Twitch Graph"),
            ),
            
            # ======================================================================================
-           # ====================   Tab 1 ENDS -- Interactive Map Tab     =========================
+           # ====================   Tab 1 ENDS -- Interactive Graph Tab   =========================
            # ====================                                         =========================
            # ====================              Tab 2 STARTS               =========================
            # ======================================================================================
            
            tabPanel("Channels",
                     
-                    DT::dataTableOutput("channelinfo")   # in the server.R logic, user can click 
-                                                          # on multiple rows, markers will show
-                                                          # up on tab 1 map (read lat-lng, plot)
+                    DT::dataTableOutput("channelinfotable") 
+                    
            ), # end of tabPanel
            
            
@@ -115,9 +97,8 @@ navbarPage(div(style='font-size: 25px;', "Twitch Graph"),
            
            tabPanel("Teams",
                     
-                    DT::dataTableOutput("teaminfo")   # in the server.R logic, user can click
-                                                          # on multiple rows, markers will show
-                                                          # up on tab 1 map (read lat-lng, plot)
+                    DT::dataTableOutput("teaminfotable") 
+                    
            ), # end of tabPanel
            
            # ======================================================================================
